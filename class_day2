@@ -1,0 +1,449 @@
+35.92.231.22
+i-04f5b5c2377ba98f6
+
+Putty > Connetions > SSH > Auth
+
+Instance ID
+i-04f5b5c2377ba98f6 (Ec2_Instance_day2)
+Open an SSH client.
+
+Locate your private key file. The key used to launch this instance is terraform_day2.pem
+
+Run this command, if necessary, to ensure your key is not publicly viewable.
+ chmod 400 terraform_day2.pem
+
+Connect to your instance using its Public DNS:
+ ec2-35-92-231-22.us-west-2.compute.amazonaws.com
+
+Example:
+
+ ssh -i "terraform_day2.pem" ubuntu@ec2-35-92-231-22.us-west-2.compute.amazonaws.com
+
+
+ ================================================
+User data >>>
+
+#!/bin/bash
+sudo echo -e "Tech@2020\nTech@2020" | passwd root;
+sudo cp -p /etc/ssh/sshd_config /etc/ssh/sshd_config_backup;
+sudo sed -i 's/^PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config;
+sudo sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config;
+sudo echo "PermitRootLogin yes" >> /etc/ssh/sshd_config;
+sudo systemctl restart sshd;
+
+---
+
+Terraform installation >>>>
+
+wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update && sudo apt install terraform
+
+----
+
+ export AWS_ACCESS_KEY_ID=""
+ export AWS_SECRET_ACCESS_KEY="asecretkey"
+
+==========================================================
+
+mkdir project1
+cd project1
+----
+vi provider.tf
+
+provider "aws" {
+  # Configuration options
+  region = "us-west-2"
+
+ }
+
+----
+
+vi ec2.tf
+
+resource "aws_instance" "web1" {
+  ami           = "ami-0fcf52bcf5db7b003" # us-west-2
+  instance_type = "t2.medium"
+  tags = {
+   Name = "first-instance"
+}
+}
+
+resource "aws_instance" "web2" {
+  ami           = "ami-0fcf52bcf5db7b003" # us-west-2
+  instance_type = "t2.medium"
+  tags = {
+   Name = "second-instance"
+}
+}
+
+-----
+
+we need authentication 
+
+export AWS_ACCESS_KEY_ID="anaccesskey"
+export AWS_SECRET_ACCESS_KEY="asecretkey"
+
+
+------ 
+
+commands >>
+
+terraform init
+terraform plan
+terrafrom validate
+terraform apply
+
+terrafrom show
+
+terraform destroy -target aws_instance.web1
+
+terrafrom apply -target aws_instance.web1
+
+======================================
+
+Authentication methods >>
+
+1. Static authentication 
+   access_key =
+   secret_key
+
+2. Env variable 
+
+export AWS_ACCESS_KEY_ID="anaccesskey"
+export AWS_SECRET_ACCESS_KEY="asecretkey"
+
+
+3. aws CLI installation
+
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" 
+apt install unzip
+unzip awscliv2.zip
+
+sudo ./aws/install
+aws configure 
+
+AKIAVYKJNA4K7TTHI25S
+pOKPLb9xB1+v/8cN0xcoUs71K6PGZjf+W4OnoSSs
+
+4. provide it a role
+
+ go to role >>> add permission (admin) >> give it a name
+ go to instance >> security >> modiy IAM role
+
+ ==============================
+
+ Output.tf
+
+output "instance_ip_addr" {
+  value = aws_instance.aws-win-web1.private_ip
+}
+
+output "instance_public_ip" {
+  value = aws_instance.aws-win-web2.public_ip
+}
+
+
+==========================================================
+
+==========================================================
+Feedback Link >>
+
+https://tcheck.co/22Ms96
+
+==========================================================
+
+
+Variable >>>
+
+1. String >>>>
+
+variable.tf
+
+variable "instance_type" {
+
+description = "we are mentioning a type"
+type = string
+}
+
+variable "ami" {
+type = string
+default = "ami-0fcf52bcf5db7b003"
+}
+
+variable "region" {
+type = string
+
+}
+
+ec2.tf
+
+resource "aws_instance" "web1" {
+  ami           = var.ami # us-west-2
+  instance_type = var.instance_type
+  tags = {
+   Name = "first-instance"
+}
+}
+
+===========================
+
+2. variable = number
+
+vi ec2.tf
+
+resource "aws_instance" "web1" {
+  ami           = var.ami # us-west-2
+  count = var.num
+  instance_type = var.instance_type
+  tags = {
+   Name = "first-instance-${count.index}"
+}
+}
+
+====\
+more ec2.tf
+resource "aws_instance" "aws-win-web1" {
+  ami           = var.ami
+  instance_type = var.instance_type
+  count = var.num
+  tags = {
+    Name = "ec2_Inst_${count.index}"
+  }
+}
+resource "aws_instance" "aws-win-web2" {
+  ami           = var.ami
+  instance_type = var.instance_type
+  count = var.num
+
+  tags = {
+    Name = "ec2_Inst_${count.index}"
+  }
+}
+=====\
+
+vi variable.tf
+
+variable "instance_type" {
+
+description = "we are mentioning a type"
+type = string
+default = "t2.micro"
+}
+
+variable "ami" {
+type = string
+default = "ami-0fcf52bcf5db7b003"
+}
+
+variable "region" {
+type = string
+default = "us-west-2"
+}
+
+variable "num" {
+type = number
+default = 2
+}
+=====\
+more variable.tf
+variable "instance_type" {
+description = "We are defining instance type here"
+type = string
+default = "t3.micro"
+}
+
+variable "num" {
+type = number
+default = 2 # how many
+}
+
+variable "ami" {
+type = string
+description = "We are defining AMI here"
+default = "ami-04adeb9ef364bcb6a"
+}
+
+========\
+
+more output.tf
+
+output "instance_0_ip_addr" {
+  value = aws_instance.aws-win-web1[0].private_ip
+}
+output "instance_0_public_ip_addr" {
+  value = aws_instance.aws-win-web1[0].public_ip
+}
+output "instance_1_ip_addr" {
+  value = aws_instance.aws-win-web1[1].private_ip
+}
+output "instance_1_public_ip_addr" {
+  value = aws_instance.aws-win-web1[1].public_ip
+}
+output "instance_2_ip_addr" {
+  value = aws_instance.aws-win-web2[0].private_ip
+}
+output "instance_2_public_ip" {
+  value = aws_instance.aws-win-web2[0].public_ip
+}
+output "instance_3_ip_addr" {
+  value = aws_instance.aws-win-web2[1].private_ip
+}
+output "instance_3_public_ip" {
+  value = aws_instance.aws-win-web2[1].public_ip
+}
+
+
+=================================================
+
+3. variable : bool, list
+
+variable "instance_type" {
+
+description = "we are mentioning a type"
+type = list(string)
+default = ["t2.micro","t2.medium", "t2.nano"]
+}
+
+variable "ip" {
+type = bool
+default = true
+}
+
+ec2.tf
+
+resource "aws_instance" "web1" {
+  ami           = var.ami # us-west-2
+  count = var.num
+  instance_type = var.instance_type[2]
+  associate_public_ip_address = var.ip
+  tags = {
+   Name = "first-instance-${count.index}"
+}
+}
+
+=================================================
+
+4. variable = map
+
+resource "aws_instance" "web1" {
+  ami           = var.ami # us-west-2
+  count = var.num
+  instance_type = var.instance_type["prod"]
+  associate_public_ip_address = var.ip
+  tags = {
+   Name = "first-instance-${count.index}"
+}
+}
+
+
+
+variable "instance_type" {
+
+description = "we are mentioning a type"
+type = map(string)
+default = {
+ test = "t2.micro"
+ prod = "t2.medium"
+ dev  = "t2.nano"
+}
+}
+
+variable "ami" {
+type = string
+default = "ami-0fcf52bcf5db7b003"
+}
+
+variable "region" {
+type = string
+default = "us-west-2"
+}
+
+variable "num" {
+type = number
+default = 2
+}
+
+variable "ip" {
+type = bool
+default = true
+}
+
+
+======================================
+
+terraform apply -var="num=2"
+
+======================================
+
+tfvars file >>>>
+
+ec2.tf
+
+resource "aws_instance" "web1" {
+  ami           = var.ami # us-west-2
+  count = var.num
+  instance_type = var.instance_type
+  associate_public_ip_address = var.ip
+  tags = {
+   Name = "first-instance-${count.index}"
+}
+}
+
+
+variable.tf
+
+variable "instance_type" {
+description = "we are mentioning a type"
+type = string
+
+}
+
+variable "ami" {
+type = string
+}
+
+variable "region" {
+type = string
+}
+
+variable "num" {
+type = number
+}
+
+variable "ip" {
+type = bool
+}
+
+
+--
+
+vi terrafrom.tfvars
+
+region="us-west-2"
+ip=true
+num=2
+ami="ami-0fcf52bcf5db7b003"
+instance_type="t2.micro"
+
+
+cat terraform-prod.tfvars
+region="us-west-1"
+ip=true
+num=1
+ami="ami-0fcf52bcf5db7b003"
+instance_type="t2.nano"
+
+cat terraform-dev.tfvars
+region="us-east-2"
+ip=true
+num=3
+ami="ami-0fcf52bcf5db7b003"
+instance_type="t2.medium"
+
+
+terraform apply -var-file="terraform-prod.tfvars"
+terraform apply -var-file="terraform-dev.tfvars"
+
+==================================================
+

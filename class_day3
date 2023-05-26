@@ -1,0 +1,400 @@
+class_day3
+
+Project >> creating an instance and linking a secuirty group
+
+cat sg.tf >>>
+
+resource "aws_security_group" "sg" {
+  name        = "security-group"
+  description = "Allow TLS inbound traffic"
+
+  ingress {
+    description      = "TLS from VPC"
+    from_port        = 443
+    to_port          = 443
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+
+  }
+
+  ingress {
+    description      = "TLS from VPC"
+    from_port        = 80
+    to_port          = 80
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+
+  }
+
+  ingress {
+    description      = "TLS from VPC"
+    from_port        = 22
+    to_port          = 22
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+
+  }
+
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "allow_tls"
+  }
+}
+
+----
+
+cat variable.tf
+variable "region" {
+type = string
+default = "us-west-2"
+}
+
+variable "ami" {
+type = string
+default = "ami-0db245b76e5c21ca1"
+}
+
+variable "instance_type" {
+type = string
+default = "t2.medium"
+}
+
+-----
+cat provider.tf
+provider "aws" {
+  # Configuration options
+  region = var.region
+
+ }
+
+----
+
+cat ec2.tf
+
+resource "aws_instance" "web1" {
+  ami           = var.ami # us-west-2
+  instance_type = var.instance_type
+  vpc_security_group_ids  = [aws_security_group.sg.id]
+  tags = {
+   Name = "test-instance"
+
+}
+}
+
+=================================================
+
+Depends_on >> once service depends on another service
+
+ec2.tf
+resource "aws_instance" "web1" {
+  ami           = var.ami # us-west-2
+  instance_type = var.instance_type
+  vpc_security_group_ids  = [aws_security_group.sg.id]
+  depends_on = [aws_s3_bucket.bucket]
+  tags = {
+   Name = "test-instance"
+
+}
+
+---
+cat s3.tf
+resource "aws_s3_bucket" "bucket" {
+  bucket = "bucket0419"
+
+tags = {
+  Name = "bucket0419"
+}
+}
+
+==============================
+
+for loop >>>>> using count
+
+
+resource "aws_instance" "web1" {
+  ami           = var.ami # us-west-2
+  count = 2
+  instance_type = var.instance_type
+  vpc_security_group_ids  = [aws_security_group.sg.id]
+  depends_on = [aws_s3_bucket.bucket]
+  tags = {
+   Name = "test-instance-${count.index}"
+
+}
+}
+
+
+output "public-ip" {
+
+value = [for public in aws_instance.web1 : public.public_ip]
+
+}
+
+output "private-ip" {
+
+value = [for private in aws_instance.web1 : private.private_ip]
+
+}
+
+
+-----------------------
+
+for_each loop >>>
+
+
+resource "aws_iam_user" "users" {
+ for_each = var.users
+ name = each.value
+}
+
+variable "users" {
+type = set(string)
+default = ["user1", "user2", "user3"]
+}
+
+
+================================================== 
+
+---
+
+cat sg.tf
+
+resource "aws_security_group" "sg" {
+  name        = "security-group44"
+  description = "Allow TLS inbound traffic"
+
+  dynamic "ingress" {
+    for_each = var.port
+    content {
+    description      = "TLS from VPC"
+    from_port        = ingress.value
+    to_port          = ingress.value
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    }
+  }
+
+
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "allow_tls"
+  }
+}
+
+---
+variable.tf
+
+variable "region" {
+type = string
+default = "us-east-1"
+}
+
+variable "ami" {
+type = string
+default = "ami-007855ac798b5175e"
+}
+
+variable "instance_type" {
+type = string
+default = "t2.medium"
+}
+
+variable "port" {
+type = list
+default = ["80", "443" , "22" , "3306" , "81", "82"]
+}
+
+==================================================
+Locals >>>
+
+ec2.tf
+
+resource "aws_instance" "web1" {
+  ami           = var.ami # us-west-2
+  count = 2
+  instance_type = var.instance_type
+  vpc_security_group_ids  = [aws_security_group.sg.id]
+  tags = {
+   Name = "${local.name}-instance"
+
+}
+}
+
+locals {
+ name = "prod"
+ }
+
+output "public-ip" {
+
+value = [for public in aws_instance.web1 : public.public_ip]
+
+}
+
+output "private-ip" {
+
+value = [for private in aws_instance.web1 : private.private_ip]
+
+}
+
+===============================================
+
+Functions >>>
+
+file function >>>
+
+resource "aws_instance" "web1" {
+  ami           = var.ami # us-west-2
+  count = 2
+  instance_type = var.instance_type
+  user_data = file("script.sh")
+  vpc_security_group_ids  = [aws_security_group.sg.id]
+  tags = {
+   Name = "${local.name}-instance"
+
+}
+}
+
+locals {
+ name = var.name
+ }
+
+output "public-ip" {
+
+value = [for public in aws_instance.web1 : public.public_ip]
+
+}
+
+output "private-ip" {
+
+value = [for private in aws_instance.web1 : private.private_ip]
+
+}
+
+=======
+
+resource "aws_instance" "web1" {
+  ami           = var.ami # us-west-2
+  count = length(var.type)
+  instance_type = var.instance_type
+  user_data = file("script.sh")
+  vpc_security_group_ids  = [aws_security_group.sg.id]
+  tags = {
+   Name = "${local.name}-instance"
+
+}
+
+
+variable.tf
+
+variable "type" {
+type = list
+default = ["t2.micro" , "t2.nano", "t2.large"]
+}
+-------
+
+concat 
+timestamp()
+
+=============================================
+
+Data resources >>> Get the information form AWS which are or are not maintained by Terraform.
+
+resource "aws_instance" "web1" {
+  ami           = data.aws_ami.ami.id # us-west-2
+  count = 2
+
+  instance_type = var.instance_type
+  user_data = file("script.sh")
+  vpc_security_group_ids  = [aws_security_group.sg.id]
+  tags = {
+   Name = "${local.name}-instance"
+
+}
+}
+
+data "aws_ami" "ami" {
+  most_recent = true
+
+  owners = ["aws-marketplace"]
+  filter {
+    name   = "name"
+    values  = ["CentOS-7*"]
+  }
+}
+
+locals {
+ name = var.name
+ }
+
+output "public-ip" {
+
+value = [for public in aws_instance.web1 : public.public_ip]
+
+}
+
+output "private-ip" {
+
+value = [for private in aws_instance.web1 : private.private_ip]
+
+}
+
+====================================================
+
+sources >>> Get the information form AWS which are or are not maintained by Terraform.
+
+resource "aws_instance" "web1" {
+  ami           = data.aws_ami.ami.id # us-west-2
+  count = 2
+
+  instance_type = var.instance_type
+  user_data = file("script.sh")
+  vpc_security_group_ids  = [aws_security_group.sg.id]
+  tags = {
+   Name = "${local.name}-instance"
+
+}
+}
+
+data "aws_ami" "ami" {
+  most_recent = true
+
+  owners = ["aws-marketplace"]
+  filter {
+    name   = "name"
+    values  = ["CentOS-7*"]
+  }
+}
+
+locals {
+ name = var.name
+ }
+
+output "public-ip" {
+
+value = [for public in aws_instance.web1 : public.public_ip]
+
+}
+
+output "private-ip" {
+
+value = [for private in aws_instance.web1 : private.private_ip]
+
+}
+
+====================================================

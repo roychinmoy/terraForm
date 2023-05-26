@@ -1,0 +1,755 @@
+Provisioners >>>
+
+1. Local-exec
+
+ec2.tf
+
+  provider "aws" {
+
+ region = "us-west-2"
+
+}
+
+resource "aws_instance" "web1" {
+  ami           = var.ami
+  instance_type = var.instance_type
+  associate_public_ip_address =true
+  tags = {
+   Name = "provisioner-instance"
+
+}
+
+provisioner "local-exec" {
+
+command = "echo this is a local provisioner and the server ip is ${self.private_ip}"
+}
+}
+
+
+variable.tf
+
+variable "ami" {
+default = "ami-0fcf52bcf5db7b003"
+}
+
+variable "instance_type" {
+default = "t2.medium"
+}
+
+===============================================================
+
+scp -i "[pem]" -r ./[directory] ec2-user@ec2-[ip].amazonaws.com:.
+scp -i "[pem]" -r /[directory] ec2-user@ec2-[ip].amazonaws.com:.
+
+ssh -i "new_key_day4.pem" ubuntu@ec2-35-93-80-235.us-west-2.compute.amazonaws.com
+===============================================================
+From local system to remote Ec2-instance
+scp -i "new_key_day4.pem" -r *.* root@ec2-35-93-80-235.us-west-2.compute.amazonaws.com:.
+
+From remote Ec2-instance to local system:-
+scp -i "new_key_day4.pem" -r root@ec2-35-93-80-235.us-west-2.compute.amazonaws.com:~/project/ec2_instance_day4/ .
+
+** new_key_day4.pem - file has to be generated over key-pair creation and save in current directory (provide path)
+
+sudo apt-get install tree
+===============================================================
+
+Remote-exec >>> to run script on the remote machine
+
+Step 1 : create a key on the local system 
+         
+            ssh-keygen -t rsa
+            create at this location (/root/pro)
+
+Step 2 : create an instance and mention the remote-exec
+
+ec2.tf
+
+provider "aws" {
+ region = "us-west-2"
+}
+
+resource "aws_instance" "web1" {
+  ami           = var.ami
+  instance_type = var.instance_type
+  key_name = "pro"
+  associate_public_ip_address =true
+  tags = {
+   Name = "provisioner-instance"
+
+}
+
+connection {
+    type     = "ssh"
+    user     = "ubuntu"
+    private_key = file("/root/pro")
+    host     = self.public_ip
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt update -y ",
+      "sudo apt install nginx -y",
+    ]
+  }
+}
+
+resource "aws_key_pair" "deployer" {
+  key_name   = "pro"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCwVQVY34rZ/oL7hRlL9I9wQim/EcI1Iuxjz3wBp3D3AnPDcVrkpEDlbUVWfN2wxbteiRqaVYuYki9wmezYhRPO5Oty9YuRdSV5g3ca3PX5Q3ijJAI6ArckBm8KWJV+FoweMyAWwgnnZFHY47PGEqq/2nDyNV3Z6Is3KKDhLy6mVYShx1KbIBaU+00YaEh6UYoSYAMcZgrsxSGocaLfUUYDSYJ05b4YN4Sos6mhujGRKOSdJxufwZcrUQ5fwdK4RfaJbEr4rVmOBHjWSAaWnV2STaDNX2evq858gEOU9q9CFyzNnTi61U0YPfkhRSWE7V1FwiKm/JE/TbXI6Z8m7x/y7G0iTIvxTAh4T6AZZUixC7VTPntebAlenkikPcaBoBn3CKlbO4OLg7sXjFONP7IUAB3DOZsXqpknfrEAnCMeub+2FD/Iy8bijXU0uDqEYbOELoBmdxYqinIOrCZuk3O//VRC9YlKphPKw3oi2tzN7YzcSQq9HW2imrvyQixRK38= root@ip-172-31-2-189"
+}
+
+-----
+variable "ami" {
+default = "ami-0fcf52bcf5db7b003"
+}
+
+variable "instance_type" {
+default = "t2.medium"
+}
+
+
+-------------
+
+
+File exec - to send files to the remote machies >>>
+
+Step1 : create a file at any location which will be used as a source in terraform definition file. for example file name is file.txt
+
+Step2: use the file provisioner to transfer the file
+
+provider "aws" {
+ region = "us-west-2"
+}
+
+resource "aws_instance" "web1" {
+  ami           = var.ami
+  instance_type = var.instance_type
+  key_name = "file"
+  associate_public_ip_address =true
+  tags = {
+   Name = "provisioner-instance"
+
+}
+
+connection {
+    type     = "ssh"
+    user     = "ubuntu"
+    private_key = file("/root/pro")
+    host     = self.public_ip
+  }
+
+
+ provisioner "file" {
+
+ source = "/root/modules/provisioners/file.txt"
+ destination = "/tmp/server"
+}
+
+}
+
+resource "aws_key_pair" "deployer" {
+  key_name   = "file"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCwVQVY34rZ/oL7hRlL9I9wQim/EcI1Iuxjz3wBp3D3AnPDcVrkpEDlbUVWfN2wxbteiRqaVYuYki9wmezYhRPO5Oty9YuRdSV5g3ca3PX5Q3ijJAI6ArckBm8KWJV+FoweMyAWwgnnZFHY47PGEqq/2nDyNV3Z6Is3KKDhLy6mVYShx1KbIBaU+00YaEh6UYoSYAMcZgrsxSGocaLfUUYDSYJ05b4YN4Sos6mhujGRKOSdJxufwZcrUQ5fwdK4RfaJbEr4rVmOBHjWSAaWnV2STaDNX2evq858gEOU9q9CFyzNnTi61U0YPfkhRSWE7V1FwiKm/JE/TbXI6Z8m7x/y7G0iTIvxTAh4T6AZZUixC7VTPntebAlenkikPcaBoBn3CKlbO4OLg7sXjFONP7IUAB3DOZsXqpknfrEAnCMeub+2FD/Iy8bijXU0uDqEYbOELoBmdxYqinIOrCZuk3O//VRC9YlKphPKw3oi2tzN7YzcSQq9HW2imrvyQixRK38= root@ip-172-31-2-189"
+}
+
+
+------
+
+
+===========================================================
+
+===========================================================
+
+Workspace >>>
+
+ 396  terraform workspace list
+  397  terraform workspace new test
+  398  terraform workspace list
+  399  terraform workspace select prod
+  400  clear
+  401  terraform apply -var-file
+  402  terraform apply -var-file="prd.tfvars"
+  403  ls
+  404  terraform workspace show
+  405  terraform workspace list
+  406  tree
+  407  celar
+  408  clear
+  409  ls
+  410  vi terraform.tfvars
+  411  cat prd.tfvars
+  412  vi terraform.tfvars
+  413  ls
+  414  cat varible.tf
+  415  terraform apply -auto-approve
+  416  ls
+  417  tree
+  418  terraform workspace show
+
+.
+├── dev.tfvars
+├── ec2.tf
+├── prd.tfvars
+├── terraform.tfstate.d
+│   ├── dev
+│   │   ├── terraform.tfstate
+│   │   └── terraform.tfstate.backup
+│   ├── prod
+│   │   ├── terraform.tfstate
+│   │   └── terraform.tfstate.backup
+│   └── test
+├── terraform.tfvars
+└── varible.tf
+
+
+cat ec2.tf
+provider "aws" {
+ region = "us-west-2"
+}
+
+resource "aws_instance" "web1" {
+  ami           = var.ami
+  instance_type = var.instance_type
+  associate_public_ip_address =true
+  tags = {
+   Name = "${terraform.workspace}-instance"
+
+}
+
+}
+
+---
+cat prd.tfvars
+ami = "ami-0fcf52bcf5db7b003"
+instance_type = "t2.micro"
+---
+cat dev.tfvars
+ami = "ami-0fcf52bcf5db7b003"
+instance_type = "t2.nano"
+
+--
+cat terraform.tfvars
+ami = "ami-0fcf52bcf5db7b003"
+instance_type = "t3.micro"
+
+cat varaible.tf
+variable "ami" {
+}
+
+variable "instance_type" {
+}
+
+
+==================================================
+
+Modules :
+
+1. Terraform registry
+
+vpc.tf
+
+provider "aws" {
+  region = "us-west-2"
+}
+
+module "vpc" {
+  source = "terraform-aws-modules/vpc/aws"
+
+  name = "my-vpc"
+  cidr = "10.0.0.0/16"
+
+  azs             = ["us-west-2a", "us-west-2b"]
+  private_subnets = ["10.0.1.0/24", "10.0.2.0/24"]
+  public_subnets  = ["10.0.101.0/24", "10.0.102.0/24"]
+
+
+  tags = {
+    Terraform = "true"
+    Environment = "dev"
+  }
+}
+
+
+=======
+2. need a module from git
+
+cat ec2.tf
+module "ec2" {
+
+source = "git::https://github.com/CloudSihmar/terraform-aws-ec2-instance1.git"
+
+region = "us-west-2"
+ami ="ami-0fcf52bcf5db7b003"
+instance_type ="t2.micro"
+}
+
+----
+
+tree .terraform
+.terraform
+├── modules
+│   ├── ec2
+│   │   ├── main.tf
+│   │   └── variablses.tf
+│   └── modules.json
+└── providers
+    └── registry.terraform.io
+        └── hashicorp
+            └── aws
+                └── 4.67.0
+                    └── linux_amd64
+                        └── terraform-provider-aws_v4.67.0_x5
+
+
+---
+
+ 404  cd mod1/
+  405  vi ec2.tf
+  406  terraform init
+  407  ls -a
+  408  tree .terraform
+  409  terraform apply -auto-approve
+  410  rm -rf .terraform
+  411  terraform init
+  412  terraform apply -auto-approve
+  413  cat ec2.tf
+  414  tree .terraform
+root@ip-172-31-48-27:~/project/modules# tree .terraform
+.terraform
+├── modules
+│   ├── ec2
+│   │   ├── main.tf
+│   │   └── variablses.tf
+│   └── modules.json
+└── providers
+    └── registry.terraform.io
+        └── hashicorp
+            └── aws
+                └── 4.67.0
+                    └── linux_amd64
+                        └── terraform-provider-aws_v4.67.0_x5
+
+8 directories, 4 files
+root@ip-172-31-48-27:~/project/modules#
+
+======================================================
+
+
+local module and module dependancy >>>>
+
+
+project/
+├── module1
+│   ├── main.tf
+│   └── variablses.tf
+├── module2
+│   ├── main.tf
+│   └── variables.tf
+├── module3
+│   ├── main.tf
+│   └── variables.tf
+├── project1
+│   ├── main.tf
+│   ├── terraform.tfstate
+│   ├── terraform.tfstate.backup
+│   └── variables.tf
+
+
+Module 1 >> EC2 instance
+
+cat module1/main.tf
+resource "aws_instance" "server" {
+
+    ami = "ami-0a695f0d95cefc163"
+    instance_type = "t2.micro"
+    key_name = "terraform"
+    security_groups = [var.security-group]
+    subnet_id = var.subnet
+    associate_public_ip_address = true
+
+  user_data = <<-EOF
+      #!/bin/sh
+      sudo apt-get update -u
+      sudo apt install -y nginx
+      sudo systemctl start nginx
+      sudo echo "<html><body><h1>Hello this is module-1 at instance id `curl http://169.254.169.254/latest/meta-data/instance-id` </h1></body></html>" > /var/www/html/index.html
+      EOF
+}
+
+
+cat module1/variables.tf
+
+variable "security-group" {
+ default= ""
+}
+
+variable "subnet" {
+ default= ""
+}
+
+
+----------------------------------------------
+
+Module2 >>>> VPC
+
+cat module2/main.tf
+
+resource "aws_vpc" "vpc" {
+  cidr_block       = var.cidr
+  instance_tenancy = "default"
+
+  tags = {
+    Name = "main"
+  }
+}
+
+resource "aws_subnet" "subnet" {
+  vpc_id     = aws_vpc.vpc.id
+  cidr_block = var.subnet
+
+  tags = {
+    Name = "Main"
+  }
+}
+
+resource "aws_route_table" "route" {
+  vpc_id = aws_vpc.vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.gw.id
+  }
+
+  tags = {
+    Name = "example"
+  }
+}
+
+resource "aws_route_table_association" "main" {
+  subnet_id      = aws_subnet.subnet.id
+  route_table_id = aws_route_table.route.id
+}
+
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.vpc.id
+
+  tags = {
+    Name = "main"
+  }
+}
+
+output "vpc_id" {
+  value = aws_vpc.vpc.id
+}
+
+output "subnet_id" {
+  value = aws_subnet.subnet.id
+}
+
+
+
+cat module2/variables.tf
+variable "cidr" {
+ default= ""
+}
+
+variable "subnet" {
+ default= ""
+}
+
+--------------------------------------------
+
+
+Module3 >> Security Group 
+
+cat module3/main.tf
+resource "aws_security_group" "main" {
+    name        = "EC2-webserver-SG-1"
+  description = "Webserver for EC2 Instances"
+  vpc_id      = var.vpc
+  ingress {
+    from_port   = 80
+    protocol    = "TCP"
+    to_port     = 80
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 22
+    protocol    = "TCP"
+    to_port     = 22
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    protocol    = "-1"
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+output "security_group_id" {
+  value = aws_security_group.main.id
+}
+
+
+cat module3/variables.tf
+variable "vpc" {
+ default= ""
+}
+
+
+=============================
+
+main file >>>>>>>>>>>>>>>>>>>
+
+
+cat main.tf
+provider "aws" {
+   region     = "us-east-2"
+}
+
+module "webserver" {
+  source = "/root/project/module1"
+  subnet = module.vpc.subnet_id
+  security-group = module.security-group.security_group_id
+}
+
+module "vpc" {
+  source = "/root/project/module2"
+  cidr = var.cidr
+  subnet = var.subnet
+}
+
+module "security-group" {
+  source = "/root/project/module3"
+  vpc = module.vpc.vpc_id
+}
+
+
+
+cat variables.tf
+variable "cidr" {
+ default= "10.0.0.0/16"
+
+}
+
+variable "subnet" {
+ default= "10.0.0.0/24"
+}
+
+
+================================================
+
+
+================================================
+
+history of commands >>>
+
+350  cat variable.tf
+  351  cat ec2.tf
+  352  vi ec2.tf
+  353  cat ec2.tf
+  354  vi ec2.tf
+  355  vi script.sh
+  356  ls
+  357  vi ec2.tf
+  358  terraform apply -auto-approve
+  359  vi sg.tf
+  360  terraform apply -auto-approve
+  361  ssh root@23.20.5.217
+  362  terraform apply -auto-approve
+  363  ssh root@23.20.5.217
+  364  cat ec2.tf
+  365  ls
+  366  vi ec2.tf
+  367  terraform apply -auto-approve
+  368  terraform destroy -auto-approve
+  369  terraform apply -auto-approve
+  370  cat ec2.tf
+  371  cat variable.tf
+  372  vi ec2.tf
+  373  terraform destroy -auto-approve
+  374  vi ec2.tf
+  375  terraform destroy -auto-approve
+  376  vi ec2.tf
+  377  terraform plan
+  378  cat ec2.tf
+  379  vi ec2.tf
+  380  terraform plan
+  381  cat ec2.tf
+  382  terraform destroy -auto-approve
+  383  cd modules/mod/
+  384  ls
+  385  clear
+  386  vi pvc.tf
+  387  ls -a
+  388  rm -rf .vpc.tf.swp
+  389  terraform init
+  390  ls
+  391  tree
+  392  la -a
+  393  ls -a
+  394  tree .terraform
+  395  terraform plan
+  396  ls
+  397  tree .terraform
+  398  terraform apply -auto-approve
+  399  terraform destroy -auto-approve
+  400  ls
+  401  cat pvc.tf
+  402  cd ..
+  403  mkdir mod1
+  404  cd mod1/
+  405  vi ec2.tf
+  406  terraform init
+  407  ls -a
+  408  tree .terraform
+  409  terraform apply -auto-approve
+  410  rm -rf .terraform
+  411  terraform init
+  412  terraform apply -auto-approve
+  413  cat ec2.tf
+  414  tree .terraform
+  415  history
+  416  ls
+  417  vi ec2.tf
+  418  ls
+  419  cd ..
+  420  ls
+  421  mkdir vpc
+  422  cd vpc/
+  423  vi vpc.tf
+  424  vi variable.tf
+  425  cd ..
+  426  mkdir sg
+  427  vi sg
+  428  cd sg/
+  429  vi sg.tf
+  430  vi variable.tf
+  431  cd ..
+  432  ls
+  433  mkdir ec2
+  434  cd ec2/
+  435  vi ec2.tf
+  436  vi variable.tf
+  437  cd ..
+  438  ls
+  439  mkdir main
+  440  vi main.tf
+  441  cd main/
+  442  vi main.tf
+  443  vi variable.tf
+  444  mkdir
+  445  pwd
+  446  vi main.tf
+  447  clear
+  448  ls
+  449  cd ..
+  450  ls
+  451  mkdir local
+  452  mv ec2/ local/
+  453  ls local/
+  454  mv sg/ local/
+  455  mv vpc local/
+  456  mv ec2 local/
+  457  mv ec2/ local/
+  458  mv main/ local/
+  459  cd local/
+  460  ls
+  461  pwd
+  462  cd main/
+  463  vi main.tf
+  464  clear
+  465  cd ..
+  466  tree
+  467  cd vpc/
+  468  cat vpc.tf
+  469  vi vpc.tf
+  470  cat v
+  471  cat variable.tf
+  472  cd ..
+  473  ls
+  474  cd sg/
+  475  cat sg.tf
+  476  cat variable.tf
+  477  cd ..
+  478  cd ec2/
+  479  cat ec2.tf
+  480  cd .
+  481  cd ..
+  482  tree
+  483  cd main/
+  484  vi main.tf
+  485  cd ..
+  486  tree
+  487  cd ec2/
+  488  vi ma
+  489  ls
+  490  rm ma
+  491  vi ec2.tf
+  492  cd ..
+  493  cd main/
+  494  vi main.tf
+  495  cat variable.tf
+  496  ls
+  497  ls -a
+  498  terraform init
+  499  ls -a
+  500  tree
+  501  tree .terraform
+  502  terraform apply -auto-approve
+  503  cat main.tf
+  504  cd ..
+  505  cd ec2/
+  506  vi ec2.tf
+  507  cd ..
+  508  cd main/
+  509  rm -rf .terraform
+  510  terraform init
+  511  terraform apply -auto-approve
+  512  vi main.tf
+  513  cd ..
+  514  cd ec2/
+  515  vi ec2.tf
+  516  cd ..
+  517  cd main/
+  518  rm -rf .terraform
+  519  terraform init
+  520  terraform apply -auto-approve
+  521  ls
+  522  cat terraform.tfstate | grep public_ip
+  523  cd ..
+  524  ls
+  525  cd project1/
+  526  ls
+  527  cd ..
+  528  apt install git
+  529  git clone https://github.com/CloudSihmar/terraform-aws-server.git
+  530  ls
+  531  cd terraform-aws-server/
+  532  ls
+  533  vi main.tf
+  534  vi variable.tf
+  535  git add .
+  536  git commit -m "added files"
+  537  git config --global user.email sandy@gmail.com
+  538  git config --global user.name sandeep
+  539  git tag v1.0.0
+  540  git remote add origin https://github.com/CloudSihmar/terraform-aws-server.git
+  541  git branch -M main
+  542  git push -u origin main
+  543  git tag v1.0.0
+  544  git commit -m "updated"
+  545  git tag v1.0.0
+  546  git push
+  547  git push --tags
+  548  vi main.tf
+  549  git tag v2.0.0
+  550  git add .
+  551  git commit -m "new version"
+  552  git push --tags
+
+===================================================================

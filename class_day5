@@ -1,0 +1,791 @@
+Terraform cloud >>
+
+
+
+Goto GIT > Import Repository > Give Name > use below git for importing GIT
+https://github.com/CloudSihmar/terraform-aws-server.git
+
+
+Provide variable on cloud >>>
+
+AWS_ACCESS_KEY_ID - 
+AWS_SECRET_ACCESS_KEY
+region = us-east-1
+ami= ami-007855ac798b5175e
+type = t2.micro
+
+
+=======================
+
+Project/Workspace > New Workspace > CLI
+
+<Give name and proceed>
+
+Follwo :-
+CLI-driven runs
+Ensure you are properly authenticated into Terraform Cloud by running terraform login on the command line or by using a credentials block.
+
+---------------------------------------------------------------------------------
+
+                                          -
+                                          -----                           -
+                                          ---------                      --
+                                          ---------  -                -----
+                                           ---------  ------        -------
+                                             -------  ---------  ----------
+                                                ----  ---------- ----------
+                                                  --  ---------- ----------
+   Welcome to Terraform Cloud!                     -  ---------- -------
+                                                      ---  ----- ---
+   Documentation: terraform.io/docs/cloud             --------   -
+                                                      ----------
+                                                      ----------
+                                                       ---------
+                                                           -----
+                                                               -
+
+
+   New to TFC? Follow these steps to instantly apply an example configuration:
+
+   $ git clone https://github.com/hashicorp/tfc-getting-started.git
+   $ cd tfc-getting-started
+   $ scripts/setup.sh
+
+
+Add a code block to your Terraform configuration files to set up the cloud integration . You can add this configuration block to any .tf file in the directory where you run Terraform.
+
+Example code
+terraform {
+  cloud {
+    organization = "atTerraformCloud"
+
+    workspaces {
+      name = "TerraformCloud_CLI"
+    }
+  }
+}
+Run terraform init to initialize the workspace.
+Run terraform apply to start the first run for this workspace.
+
+To view this run in a browser, visit:
+https://app.terraform.io/app/atTerraformCloud/TerraformCloud_CLI/runs/run-qgdq6BXDpw7yuejF
+
+============================
+
+Terraform cloud using CLI >>
+
+provider.tf 
+
+terraform {
+  cloud {
+    organization = "tech-landers"
+
+    workspaces {
+      name = "CLI"
+    }
+  }
+
+}
+
+provider "aws" {
+  # Configuration options
+  region = var.region
+  access_key = "AKIAVYKJNA4KRNBIG5OF"
+  secret_key = "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"
+}
+
+====================================================
+
+S3 backend >>> to store the tfstatefile >> 
+
+terraform {
+  backend "s3" {
+    bucket = "ansible-terraform-bucket0045"
+    key    = "path/tfstate"
+    region = "us-east-1"
+    dynamodb_table = "tftable"
+  }
+}
+
+provider "aws" {
+  # Configuration options
+  region = var.region
+}
+
+-------------------------------------------------------------------------------------------
+to unlock we can use the following commnad
+
+terraform force-unlock token123445
+
+=====================================================
+
+
+Terratest >>>
+
+https://github.com/CloudSihmar/terraform-aws-terratest
+
+
+=====================================================
+=====================================================
+
+TFLINT >>>
+
+main.tf 
+
+provider "aws" {
+
+region = "us-east-1"
+
+}
+
+resource "aws_instance" "web1" {
+  ami           = "ami-007855ac798b5175e"
+  instance_type = "t2.miro"
+  associate_public_ip_address = true
+  tags = {
+   Name = "first-instance"
+}
+}
+
+-----
+
+https://github.com/terraform-linters/tflint
+
+download >>>
+
+Step 1 >>
+curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+
+Step 2 >>
+
+You can install the plugin by adding a config to .tflint.hcl and running tflint --init:
+
+c
+
+Step 3 >> 
+tflint --init 
+
+step 4 >> test it
+
+tflint
+
+=====================================================
+
+=================================================
+
+CICD pipeline 
+
+https://github.com/CloudSihmar/DevOps-Projects-new.git
+
+=================================================
+
+219  cat project1/provider.tf
+  220  cat project1/ec2.tf
+  221  mkdir project2
+  222  cp project1/provider.tf project2/
+  223  cp project1/ec2.tf project2/
+  224  cd project2/
+  225  ls
+  226  clear
+  227  ls
+  228  cat prp
+  229  cat provider.tf
+  230  cat ec2.tf
+  231  vi variable.tf
+  232  vi ec2.tf
+  233  cat variable.tf
+  234  vi variable.tf
+  235  clear
+  236  ls
+  237  cat ec2.tf
+  238  cat provider.tf
+  239  cat variable.tf
+  240  vi sg.tf
+  241  vi ec2.tf
+  242  terraform init
+  243  terraform plan
+  244  cd modules/project2
+  245  vi variable.tf
+  246  terraform apply -auto-approve
+  247  terraform validate
+  248  vi ec2.tf
+  249  cat sg.tf
+  250  cat ec2.tf
+  251  vi ec2.tf
+  252  terraform apply -auto-approve
+  253  vi ec2.tf
+  254  terraform apply -auto-approve
+  255  vi ec2.tf
+  256  terraform apply -auto-approve
+  257  vi variable.tf
+  258  terraform apply -auto-approve
+  259  ls
+  260  cat terraform.tfstate
+  261  cat ec2.tf
+  262  cat sg.tf
+  263  cat variable.tf
+  264  cat provider.tf
+  265  cat ec2.tf
+  266  terraform destroy -auto-approve
+  267  clear
+  268  vi ec2.tf
+  269  cat ec2.tf
+  270  vi ec2.tf
+  271  clear
+  272  cat ec2.tf
+  273  vi s3.tf
+  274  vi ec2.tf
+  275  cat s3.tf
+  276  vi ec2.tf
+  277  terraform plan
+  278  vi ec2.tf
+  279  terraform plan
+  280  terraform apply -auto-approve
+  281  vi sg.tf
+  282  terraform apply -auto-approve
+  283  terraform destroy -auto-approve
+  284  clear
+  285  terraform apply -auto-approve
+  286  terraform destroy -auto-approve
+  287  cat ec2.tf
+  288  cat s3.tf
+  289  vi ec2.tf
+  290  terraform plan
+  291  clear
+  292  cat ec2.tf
+  293  cat sg.tf
+  294  clear
+  295  cat ec2.tf
+  296  terraform apply -auto-approve
+  297  cat ec2.tf
+  298  vi iam.tf
+  299  terraform plan
+  300  vi iam.tf
+  301  terraform plan
+  302  vi iam.tf
+  303  terraform plan
+  304  cat iam.tf
+  305  clear
+  306  cd modules/project2/
+  307  ls
+  308  vi sg.tf
+  309  vi variable.tf
+  310  vi sg.tf
+  311  cat variable.tf
+  312  vi sg.tf
+  313  terraform plan
+  314  vi sg.tf
+  315  terraform plan
+  316  vi variable.tf
+  317  terraform apply -auto-approve
+  318  ls
+  319  rm -rf iam.tf
+  320  terraform apply -auto-approve
+  321  vi variable.tf
+  322  terraform apply -auto-approve
+  323  ls
+  324  rm -rf s3.tf
+  325  terraform apply -auto-approve
+  326  vi ec2.tf
+  327  terraform apply -auto-approve
+  328  ls
+  329  cat ec2.tf
+  330  wq
+  331  ls
+  332  rm -rf terraform.tfstate
+  333  terraform apply -auto-approve
+  334  cat ec2.tf
+  335  cat sg.tf
+  336  cat variable.tf
+  337  terraform destroy -auto-approve
+  338  ls
+  339  clear
+  340  clear
+  341  cd modules/
+  342  cd project2
+  343  ls
+  344  vi ec2.tf
+  345  terraform plan
+  346  vi ec2.tf
+  347  vi variable.tf
+  348  vi ec2.tf
+  349  terraform plan
+  350  cat variable.tf
+  351  cat ec2.tf
+  352  vi ec2.tf
+  353  cat ec2.tf
+  354  vi ec2.tf
+  355  vi script.sh
+  356  ls
+  357  vi ec2.tf
+  358  terraform apply -auto-approve
+  359  vi sg.tf
+  360  terraform apply -auto-approve
+  361  ssh root@23.20.5.217
+  362  terraform apply -auto-approve
+  363  ssh root@23.20.5.217
+  364  cat ec2.tf
+  365  ls
+  366  vi ec2.tf
+  367  terraform apply -auto-approve
+  368  terraform destroy -auto-approve
+  369  terraform apply -auto-approve
+  370  cat ec2.tf
+  371  cat variable.tf
+  372  vi ec2.tf
+  373  terraform destroy -auto-approve
+  374  vi ec2.tf
+  375  terraform destroy -auto-approve
+  376  vi ec2.tf
+  377  terraform plan
+  378  cat ec2.tf
+  379  vi ec2.tf
+  380  terraform plan
+  381  cat ec2.tf
+  382  terraform destroy -auto-approve
+  383  celar
+  384  clear
+  385  ls
+  386  cd modules/
+  387  ls
+  388  cd project
+  389  cd project1/
+  390  ls
+  391  cd ..
+  392  mkdir provisioners
+  393  ls
+  394  cd project1
+  395  cat ec2.tf
+  396  cd ..
+  397  cd provisioners/
+  398  vi ec2.tf
+  399  vi variable.tf
+  400  ls
+  401  cat ec2.tf
+  402  vi ec2.tf
+  403  vi variable.tf
+  404  terraform init
+  405  terraform plan
+  406  terraform apply -auto-approve
+  407  vi variable.tf
+  408  vi ec2.tf
+  409  terraform apply -auto-approve
+  410  cat variable.tf
+  411  vi ec2.tf
+  412  vi variable.tf
+  413  terraform apply -auto-approve
+  414  v
+  415  cat ec2.tf
+  416  vi variable.tf
+  417  terraform apply -auto-approve
+  418  vi ec2.tf
+  419  terraform apply -auto-approve
+  420  terraform destroy -auto-approve
+  421  terraform apply -auto-approve
+  422  vi ec2.tf
+  423  terraform destroy -auto-approve
+  424  terraform apply -auto-approve
+  425  cat ec2.tf
+  426  cat variable.tf
+  427  terraform destroy -auto-approve
+  428  vi ec2.tf
+  429  ssh-keygen -t rsa
+  430  ls /root/
+  431  cat /root/ provisioner.pub
+  432  cat /root/provisioner.pub
+  433  vi ec2.tf
+  434  terraform apply -auto-approve
+  435  vi ec2.tf
+  436  terraform apply -auto-approve
+  437  terraform destroy -auto-approve
+  438  ssh-keygen -t rsa
+  439  ls /root/
+  440  cat pro.pub
+  441  cat /root/pro.pub
+  442  vi ec2.tf
+  443  terraform auto-approve
+  444  terraform apply auto-approve
+  445  terraform apply -auto-approve
+  446  history
+  447  cat ec2.tf
+  448  cat variable.tf
+  449  vi ec2.tf
+  450  terraform destroy -auto-approve
+  451  vi ec2.tf
+  452  echo "this is my server" > server
+  453  pwd
+  454  vi ec2.tf
+  455  vi script.sh
+  456  ls
+  457  terraform apply -auto-approve
+  458  vi ec2.tf
+  459  terraform apply -auto-approve
+  460  vi ec2.tf
+  461  terraform apply -auto-approve
+  462  cat ec2.tf
+  463  vi ec2.tf
+  464  terraform destroy -auto-approve
+  465  terraform workspace
+  466  terraform workspace list
+  467  cd ..
+  468  mkdir work
+  469  cd work/
+  470  ls
+  471  terraform workspace new dev
+  472  terraform workspace new prod
+  473  terraform workspace list
+  474  terraform workspace select dev
+  475  terraform workspace list
+  476  vi ec2.tf
+  477  vi varible.tf
+  478  vi prd.tfvars
+  479  vi dev.tfvars
+  480  vi varible.tf
+  481  vi prd.tfvars
+  482  vi dev.tfvars
+  483  ls
+  484  apt install tree
+  485  ls
+  486  tree terraform.tfstate.d
+  487  ls
+  488  clear
+  489  ls
+  490  cat ec2.tf
+  491  cat varible.tf
+  492  cat prd.tfvars
+  493  cat dev.tfvars
+  494  ls
+  495  tree terraform.tfstate.d
+  496  terraform plan
+  497  terraform init
+  498  clear
+  499  ls
+  500  cat ec2.tf
+  501  clear
+  502  terraform apply -var-file="dev.tfvars"
+  503  cat ec2.tf
+  504  terraform workspace list
+  505  ls
+  506  tree
+  507  terraform apply -var-file="dev.tfvars"
+  508  vi dev.tfvars
+  509  terraform apply -var-file="dev.tfvars"
+  510  clear
+  511  terraform destroy -var-file="dev.tfvars"
+  512  cd modules/provisioners/
+  513  ls
+  514  cd ..
+  515  ls
+  516  cd work/
+  517  ls
+  518  terraform destroy -var-file="dev.tfvars"
+  519  clear
+  520  tree
+  521  clear
+  522  ls
+  523  terraform workspace list
+  524  terraform workspace new test
+  525  terraform workspace list
+  526  terraform workspace select prod
+  527  clear
+  528  terraform apply -var-file
+  529  terraform apply -var-file="prd.tfvars"
+  530  ls
+  531  terraform workspace show
+  532  terraform workspace list
+  533  tree
+  534  celar
+  535  clear
+  536  ls
+  537  vi terraform.tfvars
+  538  cat prd.tfvars
+  539  vi terraform.tfvars
+  540  ls
+  541  cat varible.tf
+  542  terraform apply -auto-approve
+  543  ls
+  544  tree
+  545  terraform workspace show
+  546  history
+  547  tree
+  548  cat ec2.tf
+  549  car prd.tfvars
+  550  cat prd.tfvars
+  551  cat dev.tfvars
+  552  cat terraform.tfvars
+  553  cat varible.tf
+  554  terraform destroy -auto-approve
+  555  terraform workspace show
+  556  terraform workspace select dev
+  557  terraform apply -var-file="dev.tfvars"
+  558  clear
+  559  cat varible.tf
+  560  terraform init
+  561  ls
+  562  cat varible.tf
+  563  hostnamectl set-hostname terra
+  564  bash
+  565  clea
+  566  clear
+  567  pwd
+  568  cd modules/
+  569  mkdir mod
+  570  cd mod/
+  571  vi vpc.tf
+  572  cd modules/mod/
+  573  ls
+  574  clear
+  575  vi pvc.tf
+  576  ls -a
+  577  rm -rf .vpc.tf.swp
+  578  terraform init
+  579  ls
+  580  tree
+  581  la -a
+  582  ls -a
+  583  tree .terraform
+  584  terraform plan
+  585  ls
+  586  tree .terraform
+  587  terraform apply -auto-approve
+  588  terraform destroy -auto-approve
+  589  ls
+  590  cat pvc.tf
+  591  cd ..
+  592  mkdir mod1
+  593  cd mod1/
+  594  vi ec2.tf
+  595  terraform init
+  596  ls -a
+  597  tree .terraform
+  598  terraform apply -auto-approve
+  599  rm -rf .terraform
+  600  terraform init
+  601  terraform apply -auto-approve
+  602  cat ec2.tf
+  603  tree .terraform
+  604  history
+  605  ls
+  606  vi ec2.tf
+  607  ls
+  608  cd ..
+  609  ls
+  610  mkdir vpc
+  611  cd vpc/
+  612  vi vpc.tf
+  613  vi variable.tf
+  614  cd ..
+  615  mkdir sg
+  616  vi sg
+  617  cd sg/
+  618  vi sg.tf
+  619  vi variable.tf
+  620  cd ..
+  621  ls
+  622  mkdir ec2
+  623  cd ec2/
+  624  vi ec2.tf
+  625  vi variable.tf
+  626  cd ..
+  627  ls
+  628  mkdir main
+  629  vi main.tf
+  630  cd main/
+  631  vi main.tf
+  632  vi variable.tf
+  633  mkdir
+  634  pwd
+  635  vi main.tf
+  636  clear
+  637  ls
+  638  cd ..
+  639  ls
+  640  mkdir local
+  641  mv ec2/ local/
+  642  ls local/
+  643  mv sg/ local/
+  644  mv vpc local/
+  645  mv ec2 local/
+  646  mv ec2/ local/
+  647  mv main/ local/
+  648  cd local/
+  649  ls
+  650  pwd
+  651  cd main/
+  652  vi main.tf
+  653  clear
+  654  cd ..
+  655  tree
+  656  cd vpc/
+  657  cat vpc.tf
+  658  vi vpc.tf
+  659  cat v
+  660  cat variable.tf
+  661  cd ..
+  662  ls
+  663  cd sg/
+  664  cat sg.tf
+  665  cat variable.tf
+  666  cd ..
+  667  cd ec2/
+  668  cat ec2.tf
+  669  cd .
+  670  cd ..
+  671  tree
+  672  cd main/
+  673  vi main.tf
+  674  cd ..
+  675  tree
+  676  cd ec2/
+  677  vi ma
+  678  ls
+  679  rm ma
+  680  vi ec2.tf
+  681  cd ..
+  682  cd main/
+  683  vi main.tf
+  684  cat variable.tf
+  685  ls
+  686  ls -a
+  687  terraform init
+  688  ls -a
+  689  tree
+  690  tree .terraform
+  691  terraform apply -auto-approve
+  692  cat main.tf
+  693  cd ..
+  694  cd ec2/
+  695  vi ec2.tf
+  696  cd ..
+  697  cd main/
+  698  rm -rf .terraform
+  699  terraform init
+  700  terraform apply -auto-approve
+  701  vi main.tf
+  702  cd ..
+  703  cd ec2/
+  704  vi ec2.tf
+  705  cd ..
+  706  cd main/
+  707  rm -rf .terraform
+  708  terraform init
+  709  terraform apply -auto-approve
+  710  ls
+  711  cat terraform.tfstate | grep public_ip
+  712  cd ..
+  713  ls
+  714  cd project1/
+  715  ls
+  716  cd ..
+  717  apt install git
+  718  git clone https://github.com/CloudSihmar/terraform-aws-server.git
+  719  ls
+  720  cd terraform-aws-server/
+  721  ls
+  722  vi main.tf
+  723  vi variable.tf
+  724  git add .
+  725  git commit -m "added files"
+  726  git config --global user.email sandy@gmail.com
+  727  git config --global user.name sandeep
+  728  git tag v1.0.0
+  729  git remote add origin https://github.com/CloudSihmar/terraform-aws-server.git
+  730  git branch -M main
+  731  git push -u origin main
+  732  git tag v1.0.0
+  733  git commit -m "updated"
+  734  git tag v1.0.0
+  735  git push
+  736  git push --tags
+  737  vi main.tf
+  738  git tag v2.0.0
+  739  git add .
+  740  git commit -m "new version"
+  741  git push --tags
+  742  history
+  743  clear
+  744  cd modules/local/ec2/
+  745  vi ec2.tf
+  746  cat variable.tf
+  747  clear
+  748  ls
+  749  cd modules/
+  750  ls
+  751  cd project2/
+  752  ls
+  753  terraform login
+  754  ls
+  755  vi cloud.tf
+  756  terraform login
+  757  lsterra
+  758  ls
+  759  cd modules/
+  760  cd project2/
+  761  terraform login
+  762  terraform init
+  763  cat cloud.tf
+  764  ls
+  765  terraform apply
+  766  ls
+  767  cat provider.tf
+  768  vi cloud.tf
+  769  rm -rf provider.tf
+  770  terraform apply
+  771  vi cloud.tf
+  772  terraform apply
+  773  vi cloud.tf
+  774  terraform apply
+  775  ls -a
+  776  rm -rf terraform.tfstate terraform.tfstate.backup .terraform .terraform.lock.hcl
+  777  terraform init
+  778  terraform apply
+  779  vi cloud.tf
+  780  terraform apply
+  781  ls -a
+  782  terraform login
+  783  ls
+  784  cd ..
+  785  cd project2
+  786  cat cloud.tf
+  787  cd ..
+  788  ls
+  789  vi project2/
+  790  ls
+  791  cd project2/
+  792  vi cloud.tf
+  793  cat cloud.tf
+  794  vi cloud.tf
+  795  terraform apply
+  796  clear
+  797  ls
+  798  vi cloud.tf
+  799  clear
+  800  ls
+  801  cd modules/
+  802  ls
+  803  cd tflint/
+  804  ls
+  805  ls -a
+  806  rm -rf .tflint.hcl
+  807  rm -rf .terraform
+  808  vi main.tf
+  809  terraform init
+  810  cat main.tf
+  811  terraform import aws_instance.web1 i-04bb0051b1aa663dc
+  812  cat main.tf
+  813  export TF_LOG=debug
+ 
+  815  terraform init
+  816  ls
+  817  ls -a
+  818  mkdir
+  819  pwd
+
+  821  terraform init
+  822  ls
+  823  ls -a
+  824  export TF_LOG_PATH=/root/modules/tflint/log.txt
+  825  terraform init
+  826  cat log.txt
+
+==============================================================
